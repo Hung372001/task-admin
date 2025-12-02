@@ -1,32 +1,63 @@
 import { defineStore } from 'pinia';
 import { router } from '@/router';
-import { fetchWrapper } from '@/utils/helpers/fetch-wrapper';
+import type { User } from '@/types/user';
+import { authService } from '@/api/services/authService.ts';
 
-const baseUrl = `${import.meta.env.VITE_API_URL}/users`;
+interface AuthState {
+  user: User | null;
+  returnUrl: string | null;
+}
 
 export const useAuthStore = defineStore('auth', {
-  state: () => ({
-    // initialize state from local storage to enable user to stay logged in
-    /* eslint-disable-next-line @typescript-eslint/ban-ts-comment */
-    // @ts-ignore
-    user: JSON.parse(localStorage.getItem('user')),
-    returnUrl: null
+  state: (): AuthState => ({
+    user: JSON.parse(localStorage.getItem('user') || 'null'),
+    returnUrl: null,
   }),
-  actions: {
-    async login(username: string, password: string) {
-      const user = await fetchWrapper.post(`${baseUrl}/authenticate`, { username, password });
 
-      // update pinia state
-      this.user = user;
-      // store user details and jwt in local storage to keep user logged in between page refreshes
-      localStorage.setItem('user', JSON.stringify(user));
-      // redirect to previous url or default to home page
-      router.push(this.returnUrl || '/dashboard/default');
+  actions: {
+    async login(email: string, password: string) {
+      try {
+        const user = await authService.login( email, password );
+        // Cập nhật State
+        this.user = user;
+
+        // Lưu LocalStorage
+        localStorage.setItem('user', JSON.stringify(user));
+
+        // Redirect
+        router.push(this.returnUrl || '/dashboard/default');
+
+      } catch (error) {
+        console.error('Login failed:', error);
+        throw error;
+      }
     },
+
+    async checkAuth() {
+      // Nếu đã có user trong store rồi thì không cần check lại (tối ưu performance)
+      if (this.user) return true;
+
+      this.isChecking = true;
+      try {
+        // Gọi lên server hỏi: "Tao là ai?"
+        const user = await userService.getProfile();
+        this.user = user;
+        return true; // Session OK
+      } catch (error) {
+        console.log('Auth check failed:', error);
+        this.user = null;
+        return false; // Session Hết hạn/Lỗi
+      } finally {
+        this.isChecking = false;
+      }
+    },
+
     logout() {
       this.user = null;
+      this.returnUrl = null;
       localStorage.removeItem('user');
       router.push('/login');
     }
   }
+
 });

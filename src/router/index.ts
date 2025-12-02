@@ -15,43 +15,38 @@ export const router = createRouter({
   ]
 });
 
-interface User {
-  // Define the properties and their types for the user data here
-  // For example:
-  id: number;
-  name: string;
-}
-
-// Assuming you have a type/interface for your authentication store
-interface AuthStore {
-  user: User | null;
-  returnUrl: string | null;
-  login(username: string, password: string): Promise<void>;
-  logout(): void;
-}
-
+// --- NAVIGATION GUARD ---
 router.beforeEach(async (to, from, next) => {
-  // redirect to login page if not logged in and trying to access a restricted page
-  const publicPages = ['/'];
-  const auth: AuthStore = useAuthStore();
+  const authStore = useAuthStore();
 
-  const isPublicPage = publicPages.includes(to.path);
-  const authRequired = !isPublicPage && to.matched.some((record) => record.meta.requiresAuth);
+  // 1. Xác định route này có cần Login không?
+  // (Ưu tiên check meta.requiresAuth, mặc định là false nếu không khai báo)
+  const isAuthRequired = to.matched.some((record) => record.meta.requiresAuth);
 
-  // User not logged in and trying to access a restricted page
-  if (authRequired && !auth.user) {
-    auth.returnUrl = to.fullPath; // Save the intended page
-    next('/login');
-  } else if (auth.user && to.path === '/login') {
-    // User logged in and trying to access the login page
-    next({
-      query: {
-        ...to.query,
-        redirect: auth.returnUrl !== '/' ? to.fullPath : undefined
+  // 2. Logic Check Session
+  if (isAuthRequired) {
+    // Nếu chưa có user trong store -> Gọi API check session
+    if (!authStore.user) {
+      const isValidSession = await authStore.checkAuth();
+
+      if (!isValidSession) {
+        // Session hỏng/Hết hạn -> Đá về Login
+        authStore.returnUrl = to.fullPath;
+        return next('/login');
       }
-    });
-  } else {
-    // All other scenarios, either public page or authorized access
-    next();
+    }
   }
+
+  // 3. Logic Redirect khi đã Login
+  // Nếu đã Login (có user) mà cố tình vào trang Login -> Đá về Dashboard
+  if (authStore.user && to.path === '/login') {
+    // Lấy returnUrl hoặc về mặc định
+    const redirectPath = authStore.returnUrl || '/dashboard/default';
+    return next(redirectPath);
+  }
+
+  // 4. Cho phép đi tiếp
+  next();
 });
+
+export default router;

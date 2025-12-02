@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import Google from '@/assets/images/auth/social-google.svg';
 import { useAuthStore } from '@/stores/auth';
 import { Form } from 'vee-validate';
 
@@ -9,7 +8,7 @@ const valid = ref(false);
 const show1 = ref(false);
 //const logform = ref();
 const password = ref('admin123');
-const username = ref('info@codedthemes.com');
+const email = ref('info@codedthemes.com');
 const passwordRules = ref([
   (v: string) => !!v || 'Password is required',
   (v: string) => (v && v.length <= 10) || 'Password must be less than 10 characters'
@@ -19,7 +18,7 @@ const emailRules = ref([(v: string) => !!v || 'E-mail is required', (v: string) 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 function validate(values: any, { setErrors }: any) {
   const authStore = useAuthStore();
-  return authStore.login(username.value, password.value).catch((error) => setErrors({ apiError: error }));
+  return authStore.login(email.value, password.value).catch((error) => setErrors({ apiError: error }));
 }
 </script>
 
@@ -27,7 +26,7 @@ function validate(values: any, { setErrors }: any) {
 
   <Form @submit="validate" class="mt-7 loginForm" v-slot="{ errors, isSubmitting }">
     <v-text-field
-      v-model="username"
+      v-model="email"
       :rules="emailRules"
       label="Email Address"
       class="mt-4 mb-8"
