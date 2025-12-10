@@ -19,10 +19,10 @@ export const useAuthStore = defineStore('auth', {
       try {
         const user = await authService.login( email, password );
         // Cập nhật State
-        this.user = user;
+        this.user = user.accessToken ;
 
         // Lưu LocalStorage
-        localStorage.setItem('user', JSON.stringify(user));
+        localStorage.setItem('accessToken',  user.accessToken);
 
         // Redirect
         router.push(this.returnUrl || '/dashboard/default');
@@ -34,13 +34,11 @@ export const useAuthStore = defineStore('auth', {
     },
 
     async checkAuth() {
-      // Nếu đã có user trong store rồi thì không cần check lại (tối ưu performance)
       if (this.user) return true;
 
       this.isChecking = true;
       try {
-        // Gọi lên server hỏi: "Tao là ai?"
-        const user = await userService.getProfile();
+        const user = await authService.getProfile();
         this.user = user;
         return true; // Session OK
       } catch (error) {

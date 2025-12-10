@@ -9,6 +9,7 @@ export const authService = {
   getProfile() {
     return apiClient.get(`/auth/profile`);
   },
+
   create(data: Omit<User, 'id'>) {
     return apiClient.post<User>('/users', data);
   }

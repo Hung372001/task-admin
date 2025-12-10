@@ -32,6 +32,11 @@ const MainRoutes = {
       component: () => import('@/views/utilities/icons/MaterialIcons.vue')
     },
     {
+      name:'Khách hàng',
+      path: '/customers',
+      component: () => import('@/views/pages/CustomerPage.vue')
+    },
+    {
       name: 'Typography',
       path: '/utils/typography',
       component: () => import('@/views/utilities/typography/TypographyPage.vue')

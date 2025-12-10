@@ -14,7 +14,6 @@ const apiClient: AxiosInstance = axios.create({
 // 2. Setup Interceptor cho Request (Gửi đi)
 apiClient.interceptors.request.use(
   (config) => {
-    // Ví dụ: Thêm token vào header nếu có
     const token = localStorage.getItem('accessToken');
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;

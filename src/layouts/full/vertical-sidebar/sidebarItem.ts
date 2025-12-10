@@ -8,7 +8,8 @@ import {
   BugIcon,
   DashboardIcon,
   BrandChromeIcon,
-  HelpIcon
+  HelpIcon,
+  UserIcon
 } from 'vue-tabler-icons';
 
 export interface menu {
@@ -57,6 +58,12 @@ const sidebarItem: menu[] = [
     title: 'Error 404',
     icon: BugIcon,
     to: '/error'
+  },
+
+  {
+    title: 'Customers',
+    icon: UserIcon,
+    to: '/customers'
   },
   { divider: true },
   { header: 'Utilities' },
